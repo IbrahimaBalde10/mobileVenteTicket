@@ -1,0 +1,42 @@
+import 'package:flutter/material.dart';
+// import 'package:mobie_app/screens/transactions/TransactionDetailsScreen';
+import 'package:provider/provider.dart';
+import '../../providers/auth_provider.dart';
+import '../../providers/transaction_provider.dart';
+import '../../models/transaction.dart';
+
+class TransactionDetailsScreen extends StatelessWidget {
+  final AppTransaction transaction;
+
+  TransactionDetailsScreen(this.transaction);
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Détails de la transaction'),
+      ),
+      body: ListView(
+        children: [
+          ListTile(
+            title: Text('Nom de la transaction'),
+            subtitle: Text(transaction.transaction_name),
+          ),
+          ListTile(
+            title: Text('Montant total'),
+            subtitle: Text('${transaction.totalAmount}'),
+          ),
+          if (transaction.details != null) ...transaction.details!.entries.map(
+                (detail) => ListTile(
+                  title: Text(detail.key),
+                  subtitle: Text(detail.value.toString()),
+                  onTap: () {
+                    // Ici, vous pouvez ajouter des actions supplémentaires pour chaque détail si nécessaire
+                  },
+                ),
+              ),
+        ],
+      ),
+    );
+  }
+}
