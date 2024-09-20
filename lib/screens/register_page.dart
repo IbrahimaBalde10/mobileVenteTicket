@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:intl_phone_number_input/intl_phone_number_input.dart';
 import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
 
@@ -8,6 +9,12 @@ class RegisterPage extends StatelessWidget {
   final TextEditingController _telephoneController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
+
+  String initialCountry = 'SN'; // Pays par défaut Sénégal
+  PhoneNumber number = PhoneNumber(isoCode: 'SN'); // Indicatif par défaut
+
+  String? completePhoneNumber; // Pour stocker le numéro complet
+  String? countryCode; // Pour stocker l'indicatif du pays
 
   @override
   Widget build(BuildContext context) {
@@ -25,56 +32,88 @@ class RegisterPage extends StatelessWidget {
           child: Column(
             children: [
               SizedBox(height: 20),
-              Center(
-                child: Image.asset(
-                   'assets/background.jfif',
-                  // 'assets/logo.png', // Assurez-vous d'avoir un logo dans ce chemin
-                  height: 100,
+              Text(
+                'Créer un compte',
+                style: TextStyle(
+                  fontSize: 28,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.blueAccent,
                 ),
               ),
               SizedBox(height: 30),
-              // Text(
-              //   'Inscription',
-              //   style: TextStyle(
-              //     fontSize: 24,
-              //     fontWeight: FontWeight.bold,
-              //     color: Colors.blueAccent,
-              //   ),
-              // ),
-              // SizedBox(height: 20),
-              TextField(
-                controller: _nomController,
-                decoration: InputDecoration(
-                  labelText: 'Nom',
-                  prefixIcon: Icon(Icons.person),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(20),
+
+              // Champs Nom et Prénom
+              Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: _nomController,
+                      decoration: InputDecoration(
+                        labelText: 'Nom',
+                        prefixIcon: Icon(Icons.person),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                      ),
+                    ),
                   ),
-                ),
+                  SizedBox(width: 16),
+                  Expanded(
+                    child: TextField(
+                      controller: _prenomController,
+                      decoration: InputDecoration(
+                        labelText: 'Prénom',
+                        prefixIcon: Icon(Icons.person_outline),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ),
               SizedBox(height: 16),
-              TextField(
-                controller: _prenomController,
-                decoration: InputDecoration(
-                  labelText: 'Prénom',
-                  prefixIcon: Icon(Icons.person_outline),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(20),
-                  ),
+
+              // Champ téléphone avec indicatif
+              InternationalPhoneNumberInput(
+                onInputChanged: (PhoneNumber number) {
+                  completePhoneNumber = number.phoneNumber; // Numéro complet
+                  countryCode = number.isoCode; // Indicatif pays
+                  print('Numéro complet: $completePhoneNumber');
+                  print('Indicatif du pays: $countryCode');
+                },
+                onInputValidated: (bool isValid) {
+                  print(isValid ? 'Numéro valide' : 'Numéro invalide');
+                },
+                selectorConfig: SelectorConfig(
+                  selectorType: PhoneInputSelectorType.DROPDOWN,
+                  useEmoji: true,
                 ),
-              ),
-              SizedBox(height: 16),
-              TextField(
-                controller: _telephoneController,
-                decoration: InputDecoration(
+                ignoreBlank: false,
+                autoValidateMode: AutovalidateMode.onUserInteraction,
+                selectorTextStyle: TextStyle(color: Colors.black),
+                initialValue: number,
+                textFieldController: _telephoneController,
+                inputDecoration: InputDecoration(
                   labelText: 'Téléphone',
+                  hintText: 'Entrez votre numéro',
                   prefixIcon: Icon(Icons.phone),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(20),
                   ),
                 ),
+                countries: ['SN', 'GN', 'FR', 'US'],
+                validator: (value) {
+                  if (value == null || value.length < 7) {
+                    return 'Le numéro doit contenir au moins 7 chiffres après l\'indicatif';
+                  }
+                  return null;
+                },
+                formatInput: false, // Désactiver le formatage auto
               ),
               SizedBox(height: 16),
+
+              // Champ email
               TextField(
                 controller: _emailController,
                 decoration: InputDecoration(
@@ -86,6 +125,8 @@ class RegisterPage extends StatelessWidget {
                 ),
               ),
               SizedBox(height: 16),
+
+              // Champ mot de passe
               TextField(
                 controller: _passwordController,
                 decoration: InputDecoration(
@@ -98,6 +139,8 @@ class RegisterPage extends StatelessWidget {
                 obscureText: true,
               ),
               SizedBox(height: 20),
+
+              // Bouton S'inscrire
               ElevatedButton(
                 onPressed: () async {
                   if (_nomController.text.isEmpty ||
@@ -111,11 +154,13 @@ class RegisterPage extends StatelessWidget {
                     );
                     return;
                   }
+
+                  // Appel de la méthode d'enregistrement
                   try {
                     await authProvider.register(
                       _nomController.text,
                       _prenomController.text,
-                      _telephoneController.text,
+                      completePhoneNumber ?? '',
                       _emailController.text,
                       _passwordController.text,
                     );
@@ -128,7 +173,7 @@ class RegisterPage extends StatelessWidget {
                 },
                 style: ElevatedButton.styleFrom(
                   padding: EdgeInsets.symmetric(horizontal: 40, vertical: 15),
-                  backgroundColor: Colors.orangeAccent,
+                  backgroundColor: Colors.blueAccent,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(20),
                   ),
@@ -141,6 +186,8 @@ class RegisterPage extends StatelessWidget {
                 ),
               ),
               SizedBox(height: 20),
+
+              // Lien pour se connecter
               Center(
                 child: TextButton(
                   onPressed: () {
